@@ -1,0 +1,35 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: helm-applications
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - name: cert-manager
+            namespace: cert-manager
+            chartPath: apps/cert-manager/overlays/prod
+          - name: istiod
+            namespace: istiod
+            chartPath: apps/istiod/overlays/prod
+  template:
+    metadata:
+      name: '{{name}}'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/valkiriaaquatica/argocd-kustomize-environments.git
+        targetRevision: master
+        path: '{{chartPath}}'
+      destination:
+        name: in-cluster
+        namespace: '{{namespace}}'
+      syncPolicy: 
+        # automated:
+        #   prune: true
+        #   selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true
+          - ApplyOutOfSyncOnly=true
