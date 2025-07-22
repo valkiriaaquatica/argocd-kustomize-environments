@@ -20,15 +20,15 @@ spec:
       project: default
       source:
         repoURL: https://github.com/valkiriaaquatica/argocd-kustomize-environments.git
-        targetRevision: master
+        targetRevision: main
         path: '{{chartPath}}'
       destination:
         name: in-cluster
         namespace: '{{namespace}}'
       syncPolicy: 
-        automated:
-          prune: true
-          selfHeal: true
+        # automated:
+        #   prune: true
+        #   selfHeal: true
         syncOptions:
           - CreateNamespace=true
           - ServerSideApply=true
