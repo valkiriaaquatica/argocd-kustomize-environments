@@ -42,6 +42,13 @@ data:
 ```
 
 ### Create the Applications
+To deploy to a specific environment, simply apply the corresponding `ApplicationSet` file in each cluster:
+
+```bash
+kubectl apply -f applicationsets/dev.yaml     # for the dev cluster
+kubectl apply -f applicationsets/stg.yaml     # for the staging cluster
+kubectl apply -f applicationsets/prod.yaml    # for the production cluster
+```
 
 
 Reference: [Argo CD Kustomize Guide](https://argo-cd.readthedocs.io/en/stable/user-guide/kustomize/)
