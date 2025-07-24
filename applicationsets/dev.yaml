@@ -10,17 +10,21 @@ spec:
           - name: cert-manager
             namespace: cert-manager
             chartPath: apps/cert-manager/overlays/dev
+            wave: "0"
           - name: istiod
             namespace: istiod
             chartPath: apps/istiod/overlays/dev
+            wave: "1"
   template:
     metadata:
       name: '{{name}}'
+      annotations:
+        argocd.argoproj.io/sync-wave: '{{wave}}'
     spec:
       project: default
       source:
         repoURL: https://github.com/valkiriaaquatica/argocd-kustomize-environments.git
-        targetRevision: main
+        targetRevision: test/sync-waves
         path: '{{chartPath}}'
       destination:
         name: in-cluster
