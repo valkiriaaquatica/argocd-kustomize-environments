@@ -1,0 +1,10 @@
+api:
+  adminAccount:
+    passwordHash: "$2y$10$KrFf0jN2XBDHX37qSCOzqOyhaBGR6IdxLdfB66bY4UnTZPZoJoRZy"
+    tokenSigningKey: "IshfjJ3EgmwIdo8Xp3ZcPLD5LhzdDo2o"
+
+controller:
+  shardName: central-mgmt
+  globalCredentials:
+    namespaces:
+      - kargo
