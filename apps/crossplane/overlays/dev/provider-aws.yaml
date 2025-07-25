@@ -3,6 +3,6 @@ kind: Provider
 metadata:
   name: upbound-provider-aws-eks
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-wave: "0"
 spec:
   package: xpkg.upbound.io/upbound/provider-aws-eks:v1
