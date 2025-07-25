@@ -12,6 +12,9 @@ spec:
           - name: external-secrets
             namespace: external-secrets
             chartPath: apps/external-secrets/overlays/dev
+          - name: metallb
+            namespace: metallb
+            chartPath: apps/metallb/overlays/dev
   template:
     metadata:
       name: '{{name}}'
