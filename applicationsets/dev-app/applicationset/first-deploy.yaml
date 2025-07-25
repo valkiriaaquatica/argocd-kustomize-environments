@@ -1,8 +1,10 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: helm-applications
+  name: helm-applications-first-deploy
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
 spec:
   generators:
     - list:
@@ -10,25 +12,14 @@ spec:
           - name: cert-manager
             namespace: cert-manager
             chartPath: apps/cert-manager/overlays/dev
-            wave: "0"
-          # - name: istiod
-          #   namespace: istiod
-          #   chartPath: apps/istiod/overlays/dev
-          #   wave: "1"
-          - name: kargo
-            namespace: kargo
-            chartPath: apps/kargo/overlays/dev
-            wave: "1"
   template:
     metadata:
       name: '{{name}}'
-      annotations:
-        argocd.argoproj.io/sync-wave: '{{wave}}'
     spec:
       project: default
       source:
         repoURL: https://github.com/valkiriaaquatica/argocd-kustomize-environments.git
-        targetRevision: test/sync-waves
+        targetRevision: test/app-of-apps-and-syncwaves
         path: '{{chartPath}}'
       destination:
         name: in-cluster
