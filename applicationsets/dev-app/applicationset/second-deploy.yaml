@@ -12,6 +12,9 @@ spec:
           - name: kargo
             namespace: kargo
             chartPath: apps/kargo/overlays/dev
+          - name: external-dns
+            namespace: external-dns
+            chartPath: apps/external-dns/overlays/dev
   template:
     metadata:
       name: '{{name}}'
