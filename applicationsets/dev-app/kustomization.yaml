@@ -6,3 +6,4 @@ resources:
   - applicationset/zero-deploy.yaml
   - applicationset/first-deploy.yaml
   - applicationset/second-deploy.yaml
+  - applicationset/third-deploy.yaml
