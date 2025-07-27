@@ -1,20 +1,17 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: helm-applications-zero-deploy
+  name: helm-applications-first-deploy
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-wave: "0"
 spec:
   generators:
     - list:
         elements:
-          - name: external-secrets
-            namespace: external-secrets
-            chartPath: apps/external-secrets/overlays/dev
-          - name: metallb
-            namespace: metallb
-            chartPath: apps/metallb/overlays/dev
+          - name: cert-manager
+            namespace: cert-manager
+            chartPath: apps/cert-manager/overlays/dev
   template:
     metadata:
       name: '{{name}}'
