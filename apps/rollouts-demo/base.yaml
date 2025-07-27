@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: canary-demo-preview
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  ports:
+  - port: 80
+    targetPort: http
+    protocol: TCP
+    name: http
+  selector:
+    app: canary-demo
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: canary-demo
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  ports:
+  - port: 80
+    targetPort: http
+    protocol: TCP
+    name: http
+  selector:
+    app: canary-demo
