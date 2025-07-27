@@ -1,0 +1,34 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: helm-applications-crossplane-resources-app
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  generators:
+    - list:
+        elements:
+          - name: crossplane-resources
+            namespace: default
+            chartPath: apps/crossplane/overlays/dev/resources
+  template:
+    metadata:
+      name: '{{name}}'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/valkiriaaquatica/argocd-kustomize-environments.git
+        targetRevision: test/app-of-apps-and-syncwaves
+        path: '{{chartPath}}'
+      destination:
+        name: in-cluster
+        namespace: '{{namespace}}'
+      syncPolicy: 
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true
+          - ApplyOutOfSyncOnly=true

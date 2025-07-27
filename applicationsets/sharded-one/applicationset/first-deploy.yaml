@@ -1,0 +1,37 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: helm-applications-second-deploy
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  generators:
+    - list:
+        elements:
+          - name: kargo
+            namespace: kargo
+            chartPath: apps/kargo/overlays/dev
+          - name: argo-rollouts
+            namespace: argo-rollouts
+            chartPath: apps/argo-rollouts/overlays/dev
+  template:
+    metadata:
+      name: '{{name}}'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/valkiriaaquatica/argocd-kustomize-environments.git
+        targetRevision: test/kargo-sharded-rollouts
+        path: '{{chartPath}}'
+      destination:
+        name: in-cluster
+        namespace: '{{namespace}}'
+      syncPolicy: 
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true
+          - ApplyOutOfSyncOnly=true
