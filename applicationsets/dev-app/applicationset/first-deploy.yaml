@@ -19,7 +19,7 @@ spec:
       project: default
       source:
         repoURL: https://github.com/valkiriaaquatica/argocd-kustomize-environments.git
-        targetRevision: test/app-of-apps-and-syncwaves
+        targetRevision: test/kargo-sharded-rollouts
         path: '{{chartPath}}'
       destination:
         name: in-cluster
