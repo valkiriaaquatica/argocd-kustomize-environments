@@ -7,5 +7,5 @@ helmCharts:
     releaseName: crossplane
     namespace: crossplane-system
 
-resources:
-  - provider-aws.yaml
+# resources:
+#   - provider-aws.yaml
