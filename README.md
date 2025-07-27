@@ -1,54 +1,44 @@
 ## Kustomize + Argo CD Multi-Environment Cluster Bootstrapping
 
-This repo uses `kustomize build --enable-helm --load-restrictor=LoadRestrictionsNone` to render Helm charts inside Kustomize overlays.
-This an effective way of **bootsrapping** you different clusters in different environemtns with similar configurations and not repeting too many files.
+This repository bootstraps multiple Kubernetes environments (dev, stg, prod) using `kustomize build --enable-helm --load-restrictor=LoadRestrictionsNone` along with Argo CD.
 
-It is think on having 3 different clusters (one per environemt) and applying each applicationset in the folder /applicationsets in each cluster, thinking of 1 ArgoCD * 1 Cluster(environment). If you are using 1 ArgoCD who controlls all the environments, you will need just to change the name in the applications inside the generators of each applicationset to not have the same apps name.
+Each environment has a top-level `Application` (e.g., `applicationsets/dev-app/application.yaml`) that deploys an `ApplicationSet`. This `ApplicationSet` defines multiple apps, each tagged with a `sync-wave`, enabling controlled deployment order.
+
+---
 
 ### Structure
 
-* `applicationsets/`: Argo CD `ApplicationSet` manifests (`dev.yaml`, `stg.yaml`, `prod.yaml`).
-* `apps/`:
-
-  * `cert-manager/`: Helm chart with base config + per-environment overrides.
-  * `istiod/`: Helm chart with shared values, version changes per environment.
+* `applicationsets/dev-app/application.yaml`: Argo CD `Application` pointing to the `ApplicationSet` for the dev environment.
+* `applicationsets/dev.yaml`: Defines the `ApplicationSet` with multiple apps using `sync-waves`.
+* `apps/`: Application directories, each with a `base` and environment-specific `overlays`.
 
 ---
 
-### App Logic
+### Deploy to an Environment
 
-#### `cert-manager`
+Apply the `Application` for the desired environment:
 
-* Uses **value merging**:
+```bash
+kubectl apply -f applicationsets/dev-app/application.yaml
+```
 
-  * `base/values.yaml`: shared defaults
-  * `overlays/<env>/values.yaml`: overrides per environment
-
-#### `istiod`
-
-* Uses a **single shared `values.yaml`**
-* Only the **chart version** changes per environment.
+This deploys the `ApplicationSet`, which in turn creates individual applications in the order defined by `sync-waves`.
 
 ---
 
-### Important for Argo CD
+### Argo CD Configuration Required
 
-To make this work, Argo CD must allow loading values from outside the overlay directory.
-You must set this in the `argocd-cm` ConfigMap:
+Make sure Argo CD allows Kustomize to load values outside the overlay directory by setting this in the `argocd-cm` ConfigMap:
 
 ```yaml
 data:
   kustomize.buildOptions: --enable-helm --load-restrictor LoadRestrictionsNone
 ```
 
-### Create the Applications
-To deploy to a specific environment, simply apply the corresponding `ApplicationSet` file in each cluster:
+---
 
-```bash
-kubectl apply -f applicationsets/dev.yaml     # for the dev cluster
-kubectl apply -f applicationsets/stg.yaml     # for the staging cluster
-kubectl apply -f applicationsets/prod.yaml    # for the production cluster
-```
+### References
 
+* [Argo CD Kustomize Guide](https://argo-cd.readthedocs.io/en/stable/user-guide/kustomize/)
+* [Argo CD Sync Waves](https://argo-cd.readthedocs.io/en/stable/user-guide/sync-waves/)
 
-Reference: [Argo CD Kustomize Guide](https://argo-cd.readthedocs.io/en/stable/user-guide/kustomize/)
