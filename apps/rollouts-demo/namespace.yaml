@@ -1,0 +1,7 @@
+# rollouts-test.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rollouts-test
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
