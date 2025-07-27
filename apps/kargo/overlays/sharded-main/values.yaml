@@ -5,6 +5,6 @@ api:
 
 controller:
   shardName: central-mgmt
-  globalCredentials:
-    namespaces:
-      - kargo
+  # globalCredentials:
+  #   namespaces:
+  #     - kargo
