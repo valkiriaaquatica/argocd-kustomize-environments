@@ -8,3 +8,4 @@ resources:
   - applicationset/second-deploy.yaml
   - applicationset/third-deploy.yaml
   - applicationset/fourth-deploy.yaml
+  - applicationset/crossplane-resources.yaml
