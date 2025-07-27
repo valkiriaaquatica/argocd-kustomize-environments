@@ -4,6 +4,7 @@ metadata:
   name: canary-demo
   annotations:
     argocd.argoproj.io/sync-wave: "2"
+  namespace: rollouts-test
 spec:
   replicas: 5
   revisionHistoryLimit: 1
