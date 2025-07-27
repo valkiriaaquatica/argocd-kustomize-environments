@@ -7,3 +7,6 @@ helmCharts:
     releaseName: kargo
     namespace: kargo
     valuesFile: values.yaml
+  
+resources:
+  - config-rollouts-app.yaml

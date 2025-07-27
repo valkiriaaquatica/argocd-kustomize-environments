@@ -1,0 +1,202 @@
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Project
+metadata:
+  name: kargo-test-rollouts
+---
+apiVersion: kargo.akuity.io/v1alpha1
+kind: ProjectConfig
+metadata:
+  name: kargo-test-rollouts
+  namespace: kargo-test-rollouts
+spec:
+  promotionPolicies:
+  - stageSelector:
+      name: dev
+    autoPromotionEnabled: false
+--- 
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Warehouse
+metadata:
+  name: kargo-test-rollouts
+  namespace: kargo-test-rollouts
+spec:
+  shard: central-mgmt
+  freightCreationPolicy: Automatic
+  interval: 10m0s # check every 10 minutes
+  subscriptions:
+  - image: # this is the mage pushed by the pipelnies that needs to be replicated in AZ and different accounts
+      discoveryLimit: 5
+      strictSemvers: true
+      imageSelectionStrategy: SemVer # the image shoudl not be final release btw
+      repoURL: argoproj/rollouts-demo
+  - git:
+      repoURL: https://github.com/valkiriaaquatica/argocd-kustomize-environments.git
+      branch: test/kargo-sharded-rollouts
+      includePaths: 
+        - apps/rollouts-demo
+---
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Stage
+metadata:
+  name: dev
+  namespace: kargo-test-rollouts
+  annotations:
+    kargo.akuity.io/color: blue
+spec:
+  # shard: dev-eu
+  shard: shard-one
+  requestedFreight:
+  - origin:
+      kind: Warehouse
+      name: kargo-test-rollouts
+    sources:
+      direct: true
+  promotionTemplate:
+    spec:
+      vars:
+      - name: gitopsRepo
+        value: https://github.com/valkiriaaquatica/argocd-kustomize-environments.git
+      - name: outPath
+        value: ./out
+      - name: srcPath
+        value: ./src
+      - name: chartPathBase
+        value: charts/dpad
+      - name: chartPath
+        value: stages/dev
+      - name: valuesFile
+        value: values-${{ ctx.stage }}1-blue.yaml
+      - name: appNamespace # this should be static when using multiple clusters
+        value: test-rollouts
+      steps:
+      - uses: git-clone
+        config:
+          repoURL: ${{ vars.gitopsRepo }}
+          checkout:
+          - commit: ${{ commitFrom(vars.gitopsRepo).ID }} 
+            path: ${{ vars.srcPath }}
+          - branch: env/${{ ctx.stage }}
+            create: true
+            path: ${{ vars.outPath }}
+      - uses: git-clear
+        config:
+          path: ${{ vars.outPath }}
+      - uses: yaml-update
+        as: update-image
+        config:
+          path: ${{ vars.srcPath }}/apps/rollouts-demo/canary-rollout.yaml
+          updates:
+          - key: spec.template.spec.containers[0].image
+            value: ${{ imageFrom("argoproj/rollouts-demo").RepoURL }}:${{ imageFrom("argoproj/rollouts-demo").Tag }}
+      - uses: git-commit
+        as: commit
+        config:
+          path: ${{ vars.outPath }}
+          message: "Kargo is updating on development"
+      - uses: git-push
+        config:
+          path: ${{ vars.outPath }}
+      - uses: argocd-update
+        config:
+          apps:
+          - name: rollouts-test-${{ ctx.stage }}
+            sources:
+            - repoURL: ${{ vars.gitopsRepo }}
+              desiredRevision: ${{ outputs.commit.commit }}   
+---
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Stage
+metadata:
+  name: dev-mxc
+  namespace: kargo-test-rollouts
+  annotations:
+    kargo.akuity.io/color: blue
+spec:
+  shard: dev-eu-black
+  # shard: dev-mxc
+  requestedFreight:
+  - origin:
+      kind: Warehouse
+      name: kargo-test-rollouts
+    sources:
+      direct: true
+  promotionTemplate:
+    spec:
+      vars:
+      - name: gitopsRepo
+        value: https://github.com/facephi/k8-dpad.git
+      - name: outPath
+        value: ./out
+      - name: srcPath
+        value: ./src
+      - name: chartPathBase
+        value: charts/dpad
+      - name: chartPath
+        value: stages/dev
+      - name: valuesFile
+        value: values-${{ ctx.stage }}1-blue.yaml
+      - name: appNamespace # this should be static when using multiple clusters
+        # value: dpad
+        value: dpad-kargo-dev-mxc-black
+      - name: srcImageRepo # this will have the mxc repo when real mxc cluster
+        value: 094331648932.dkr.ecr.eu-west-1.amazonaws.com/identity-api-services/internal/dpad
+      steps:
+      - uses: git-clone
+        config:
+          repoURL: ${{ vars.gitopsRepo }}
+          checkout:
+          - commit: ${{ commitFrom(vars.gitopsRepo).ID }} 
+            path: ${{ vars.srcPath }}
+          - branch: env/${{ ctx.stage }}
+            create: true
+            path: ${{ vars.outPath }}
+      - uses: git-clear
+        config:
+          path: ${{ vars.outPath }}
+      - uses: yaml-update
+        as: update-image
+        config:
+          path: ${{ vars.srcPath }}/${{ vars.chartPath }}/${{ vars.valuesFile }}
+          updates:
+          - key: image.tag
+            value: ${{ imageFrom(vars.srcImageRepo).Tag }} 
+      - uses: helm-template
+        config:
+          path: ${{ vars.srcPath }}/${{ vars.chartPathBase }}
+          buildDependencies: true
+          namespace: ${{ vars.appNamespace }}
+          valuesFiles:
+          - ${{ vars.srcPath }}/${{ vars.chartPathBase }}/values.yaml
+          - ${{ vars.srcPath }}/${{ vars.chartPath }}/${{ vars.valuesFile }}
+          outPath: ${{ vars.outPath }}
+          releaseName: dpad
+      - uses: git-commit
+        as: commit
+        config:
+          path: ${{ vars.outPath }}
+          message: "Kargo is updating on development on MX Central"
+      - uses: git-push
+        as: push
+        config:
+          path: ${{ vars.outPath }}
+          generateTargetBranch: true
+      # add here open pr
+      - uses: git-open-pr
+        as: open-pr
+        config:
+          repoURL: ${{ vars.gitopsRepo }}
+          createTargetBranch: true
+          sourceBranch: ${{ outputs.push.branch }}
+          targetBranch: env/${{ ctx.stage }}
+      - uses: git-wait-for-pr
+        as: wait-for-pr
+        config:
+          repoURL: ${{ vars.gitopsRepo }}
+          prNumber: ${{ outputs['open-pr'].pr.id }}
+      - uses: argocd-update
+        config:
+          apps:
+          - name: ias-dpad-${{ ctx.stage }}
+            sources:
+            - repoURL: ${{ vars.gitopsRepo }}
+              desiredRevision: ${{ outputs.commit.commit }}
