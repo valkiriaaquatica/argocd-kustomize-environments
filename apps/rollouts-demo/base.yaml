@@ -4,6 +4,7 @@ metadata:
   name: canary-demo-preview
   annotations:
     argocd.argoproj.io/sync-wave: "1"
+  namespace: rollouts-test
 spec:
   ports:
   - port: 80
@@ -19,6 +20,7 @@ metadata:
   name: canary-demo
   annotations:
     argocd.argoproj.io/sync-wave: "1"
+  namespace: rollouts-test
 spec:
   ports:
   - port: 80
