@@ -12,7 +12,7 @@ spec:
   source:
     repoURL: https://github.com/valkiriaaquatica/argocd-kustomize-environments.git
     targetRevision: test/kargo-sharded-rollouts
-    path: applicationsets/dev-app/
+    path: applicationsets/sharded-one/
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
