@@ -10,7 +10,6 @@ spec:
     - list:
         elements:
           - name: crossplane-resources
-            namespace: crossplane-system
             chartPath: apps/crossplane/overlays/dev/resources
   template:
     metadata:
